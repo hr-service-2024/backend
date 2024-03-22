@@ -5,7 +5,7 @@ class TelegramBot:
     def __init__(self, token: str, parse_mode: str = 'HTML'):
         self.bot = telebot.TeleBot(token=token, parse_mode=parse_mode)
 
-    def post_channel(self, data: dict):
+    def post_channel(self, data: dict) -> None:
         photo = open(data.get('photo_path'), 'rb')
         text = data.get('text')
         if len(text) > 1000:
