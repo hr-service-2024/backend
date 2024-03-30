@@ -12,7 +12,7 @@ from src.utils import text_to_image, image_to_image
 last_template = None
 
 
-async def generate_image(text: str, name: str, is_first_regen: bool = True) -> str:
+async def generate_image(text: str, name: str) -> str:
     global last_template
     try:
         # выбор шаблона (в первый раз рандомный, в следующие разы меняется)
@@ -25,10 +25,7 @@ async def generate_image(text: str, name: str, is_first_regen: bool = True) -> s
         template_path = f'static/img/template{template_number}.png'
 
         # наложение картинки на шаблон
-        if is_first_regen:
-            chat_image_path = gen_image(name)
-        else:
-            chat_image_path = 'static/img/reserve.jpg'
+        chat_image_path = gen_image(name)
         template_with_image = image_to_image(template_path, chat_image_path)
 
         # наложение текста на шаблон с картинкой

@@ -27,7 +27,7 @@ async def show_vacancy(request: Request, vacancy_name: str = Form(...)):
 
 @app.post('/regeneration_image')
 async def regeneration_image(request: Request, text: str = Form(...), photo_path: str = Form(...), vacancy_name: str = Form(...)):
-    photo_path = await generate_image(text.replace('\r', ''), vacancy_name, is_first_regen=False)
+    photo_path = await generate_image(text.replace('\r', ''), vacancy_name)
     return templates.TemplateResponse('index.html', {'request': request, 'text': text, 'photo_path': photo_path, 'vacancy_name': vacancy_name})
 
 
