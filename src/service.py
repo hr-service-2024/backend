@@ -1,5 +1,4 @@
 import json
-import os
 from bs4 import BeautifulSoup
 from random import randint
 
@@ -7,16 +6,16 @@ from src.config import TG_TOKEN, TG_CHANNEL_ID, VK_TOKEN, VK_CHANNEL_ID
 from src.schemas import ShowVacancy
 from src.telegram.tg_bot import TelegramBot
 from src.vkontakte.vk_bot import VkBot
-from src.utils import fix_mistakes, text_to_image, generate_image_chat, image_to_image
+from src.utils import generate_image as gen_image
+from src.utils import text_to_image, image_to_image
 
 last_template = None
 
 
-async def generate_image(text: str, name: str) -> str:
+async def generate_image(text: str, name: str, is_first_regen: bool = True) -> str:
     global last_template
     try:
-        txt = text.split('\n\n')
-        responsibilities = txt[txt.index('Обязанности:') + 1:][0].split('\n')
+        # выбор шаблона (в первый раз рандомный, в следующие разы меняется)
         if last_template == 1:
             template_number = 2
         elif last_template == 2:
@@ -24,10 +23,16 @@ async def generate_image(text: str, name: str) -> str:
         else:
             template_number = randint(1, 2)
         template_path = f'static/img/template{template_number}.png'
-        template_with_text_path = text_to_image(template_path, name, responsibilities)
 
-        chat_image_path = generate_image_chat(name)
-        photo_path = image_to_image(template_with_text_path, chat_image_path)
+        # наложение картинки на шаблон
+        if is_first_regen:
+            chat_image_path = gen_image(name)
+        else:
+            chat_image_path = 'static/img/reserve.jpg'
+        template_with_image = image_to_image(template_path, chat_image_path)
+
+        # наложение текста на шаблон с картинкой
+        photo_path = text_to_image(template_with_image, name, text)
     except Exception as _ex:
         return 'static/img/reserve.jpg'
     else:
@@ -66,4 +71,3 @@ async def send_vacancy_to_networks(text: str, photo_path: str, vk: bool, tg: boo
         TelegramBot(token=TG_TOKEN).post_channel(data=data)
     if vk:
         VkBot(token=VK_TOKEN).post_channel(data=data)
-    os.remove(photo_path)
