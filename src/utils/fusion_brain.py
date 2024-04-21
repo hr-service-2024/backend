@@ -1,6 +1,5 @@
 import json
 import time
-import os
 from base64 import b64decode
 import requests
 

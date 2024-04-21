@@ -1,4 +1,4 @@
-# Backend HR-service
+# Backend HR-service dev
 
 ## Настройка
 Установка виртуального окружения и зависимостей
