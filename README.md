@@ -10,7 +10,16 @@ venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
+## Миграции
+```shell
+alembic init -t async alembic
+
+alembic revision --autogenerate -m "Create test base table"  
+
+alembic upgrade head
+```
+
 ## Запуск проекта
 ```shell
-python -m src.app.py
+uvicorn src.main:app --reload --port 80
 ```
