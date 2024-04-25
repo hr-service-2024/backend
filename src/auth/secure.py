@@ -18,10 +18,11 @@ def verify_password(plain_password: str, hashed_password: bytes) -> bool:
     return pwd_context.verify(plain_password, hashed_password)
 
 
-def encode_jwt(user: UserSchema, secrete_key: str = settings.JWT_SECRET_KEY, algorithm: str = settings.JWT_ALGORITHM,
-               expire_minutes: int = 15):
+def encode_jwt(user: UserSchema, token_type: str, expire_minutes: int, secrete_key: str = settings.JWT_SECRET_KEY,
+               algorithm: str = settings.JWT_ALGORITHM):
     payload = dict(
         sub=str(user.id),
+        type=token_type,
         iat=datetime.utcnow(),
         exp=datetime.utcnow() + timedelta(minutes=expire_minutes)
     )
@@ -29,7 +30,7 @@ def encode_jwt(user: UserSchema, secrete_key: str = settings.JWT_SECRET_KEY, alg
     return encoded_jwt
 
 
-def decode_jwt(token, secrete_key: str = settings.JWT_SECRET_KEY, algorithm: str = settings.JWT_ALGORITHM) -> int:
+def decode_jwt(token, expected_type: str, secrete_key: str = settings.JWT_SECRET_KEY, algorithm: str = settings.JWT_ALGORITHM) -> int:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail='Could not validate credentials',
@@ -37,9 +38,16 @@ def decode_jwt(token, secrete_key: str = settings.JWT_SECRET_KEY, algorithm: str
     )
     try:
         payload = jwt.decode(token, secrete_key, algorithms=[algorithm])
-        id = int(payload.get('sub'))
-        if id is None:
+        token_type = payload.get('type')
+        if token_type != expected_type:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail=f"Invalid token type {token_type!r} expected {expected_type!r}",
+                headers={'WWW-Authenticate': 'Bearer'}
+            )
+        user_id = int(payload.get('sub'))
+        if user_id is None:
             raise credentials_exception
     except JWTError:
         raise credentials_exception
-    return id
+    return user_id

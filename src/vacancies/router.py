@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 from typing import Annotated
 
-from src.auth.utils import get_current_active_user
+from src.auth.utils import get_current_user
 from src.auth.schemas import UserSchema
 
 router = APIRouter(
@@ -11,7 +11,7 @@ router = APIRouter(
 
 
 @router.get('/')
-def get_user(user: Annotated[UserSchema, Depends(get_current_active_user)]):
+def get_user(user: Annotated[UserSchema, Depends(get_current_user)]):
     return user
 
 # @router.get('/')

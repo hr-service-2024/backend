@@ -22,7 +22,7 @@ async def generate_image(text: str, name: str) -> str:
             template_number = 1
         else:
             template_number = randint(1, 2)
-        template_path = f'static/img/template{template_number}.png'
+        template_path = f'img/template{template_number}.png'
 
         # наложение картинки на шаблон
         chat_image_path = gen_image(name)

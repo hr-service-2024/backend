@@ -34,9 +34,16 @@ class UserService:
     async def auth_user(self, data: UserAuthSchema) -> UserSchema:
         user = await self.get_by_username(data.username)
         if not user.is_active:
-            raise HTTPException(detail='User is not active', status_code=status.HTTP_400_BAD_REQUEST)
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail='User is not active',
+                headers={'WWW-Authenticate': 'Bearer'}
+            )
         if not verify_password(data.password, user.hashed_password):
-            raise HTTPException(detail='Password is not correct', status_code=status.HTTP_401_UNAUTHORIZED)
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail='Password is not correct'
+            )
         return user
 
 

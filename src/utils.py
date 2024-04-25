@@ -41,7 +41,10 @@ class SQLAlchemyRepository(AbstractRepository):
                 res = await session.execute(query)
                 res = res.scalar_one().to_read_model()
             except NoResultFound:
-                raise HTTPException(detail='User with this id not found', status_code=status.HTTP_404_NOT_FOUND)
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail='User with this id not found'
+                )
             return res
 
     async def find_all(self) -> List[BaseModel]:
