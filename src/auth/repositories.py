@@ -19,9 +19,9 @@ class UserRepository(SQLAlchemyRepository):
                 query = select(self.model).where(func.lower(self.model.username) == username.lower())
                 res = await session.execute(query)
                 res = res.scalar_one().to_read_model()
+                return res
             except NoResultFound:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
                     detail='User with this username not found'
                 )
-            return res

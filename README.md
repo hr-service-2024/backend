@@ -21,5 +21,5 @@ alembic upgrade head
 
 ## Запуск проекта
 ```shell
-uvicorn src.main:app --reload --port 80
+uvicorn src.main:app --reload --host localhost --port 80
 ```

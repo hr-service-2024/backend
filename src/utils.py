@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from sqlalchemy import insert, select
+from sqlalchemy import insert, delete, update, select
 from sqlalchemy.exc import NoResultFound
 from fastapi import status
 from fastapi.exceptions import HTTPException
@@ -15,6 +15,14 @@ class AbstractRepository(ABC):
         raise NotImplementedError
 
     @abstractmethod
+    async def delete_one():
+        raise NotImplementedError
+
+    @abstractmethod
+    async def update_one():
+        raise NotImplementedError
+
+    @abstractmethod
     async def find_by_id():
         raise NotImplementedError
 
@@ -26,26 +34,40 @@ class AbstractRepository(ABC):
 class SQLAlchemyRepository(AbstractRepository):
     model = None
 
-    async def add_one(self, data: dict) -> int:
+    async def add_one(self, data: dict) -> BaseModel:
         async with async_session_maker() as session:
-            stmt = insert(self.model).values(**data).returning(self.model.id)
+            stmt = insert(self.model).values(**data).returning(self.model)
             res = await session.execute(stmt)
-            res = res.scalar_one()
+            res = res.scalar_one().to_read_model()
             await session.commit()
             return res
 
-    async def find_by_id(self, id: int) -> BaseModel:
+    async def delete_one(self, obj_id: int) -> None:
+        async with async_session_maker() as session:
+            stmt = delete(self.model).where(self.model.id == obj_id)
+            await session.execute(stmt)
+            await session.commit()
+
+    async def update_one(self, obj_id: int, data: dict) -> BaseModel:
+        async with async_session_maker() as session:
+            stmt = update(self.model).values(**data).where(self.model.id == obj_id).returning(self.model)
+            res = await session.execute(stmt)
+            res = res.scalar_one().to_read_model()
+            await session.commit()
+            return res
+
+    async def find_by_id(self, obj_id: int) -> BaseModel:
         async with async_session_maker() as session:
             try:
-                query = select(self.model).where(self.model.id == id)
+                query = select(self.model).where(self.model.id == obj_id)
                 res = await session.execute(query)
                 res = res.scalar_one().to_read_model()
+                return res
             except NoResultFound:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
                     detail='User with this id not found'
                 )
-            return res
 
     async def find_all(self) -> List[BaseModel]:
         async with async_session_maker() as session:

@@ -1,6 +1,6 @@
 ### main template
 # alembic
-alembic
+alembic/
 alembic.ini
 
 # Byte-compiled / optimized / DLL files

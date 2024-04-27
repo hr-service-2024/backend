@@ -56,7 +56,8 @@ class FusionBrain:
 
 def generate_image(name: str) -> str:
     try:
-        api = FusionBrain('https://api-key.fusionbrain.ai/', settings.FUSION_BRAIN_API_KEY, settings.FUSION_BRAIN_SECRET_KEY)
+        api = FusionBrain('https://api-key.fusionbrain.ai/', settings.fusion_brain.FUSION_BRAIN_API_KEY,
+                          settings.fusion_brain.FUSION_BRAIN_SECRET_KEY)
         uuid = api.generate(name)
         file_path = api.save_image(uuid)
     except Exception as _ex:

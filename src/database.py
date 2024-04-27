@@ -5,7 +5,7 @@ from typing import AsyncGenerator
 
 from src.config import settings
 
-DATABASE_URL = f'postgresql+asyncpg://{settings.DB_USER}:{settings.DB_PASS}@{settings.DB_HOST}:{settings.DB_PORT}/{settings.DB_NAME}'
+DATABASE_URL = f'postgresql+asyncpg://{settings.db.DB_USER}:{settings.db.DB_PASS}@{settings.db.DB_HOST}:{settings.db.DB_PORT}/{settings.db.DB_NAME}'
 Base: DeclarativeMeta = declarative_base()
 
 engine = create_async_engine(DATABASE_URL)

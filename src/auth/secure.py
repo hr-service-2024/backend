@@ -18,8 +18,8 @@ def verify_password(plain_password: str, hashed_password: bytes) -> bool:
     return pwd_context.verify(plain_password, hashed_password)
 
 
-def encode_jwt(user: UserSchema, token_type: str, expire_minutes: int, secrete_key: str = settings.JWT_SECRET_KEY,
-               algorithm: str = settings.JWT_ALGORITHM):
+def encode_jwt(user: UserSchema, token_type: str, expire_minutes: int, secrete_key: str = settings.jwt.JWT_SECRET_KEY,
+               algorithm: str = settings.jwt.JWT_ALGORITHM):
     payload = dict(
         sub=str(user.id),
         type=token_type,
@@ -30,7 +30,8 @@ def encode_jwt(user: UserSchema, token_type: str, expire_minutes: int, secrete_k
     return encoded_jwt
 
 
-def decode_jwt(token, expected_type: str, secrete_key: str = settings.JWT_SECRET_KEY, algorithm: str = settings.JWT_ALGORITHM) -> int:
+def decode_jwt(token, expected_type: str, secrete_key: str = settings.jwt.JWT_SECRET_KEY,
+               algorithm: str = settings.jwt.JWT_ALGORITHM) -> int:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail='Could not validate credentials',
