@@ -2,10 +2,10 @@ from fastapi import APIRouter, Depends, status
 from typing import Annotated, Union, Optional, List
 
 from src.config import settings
-from src.auth.service import UserService
-from src.auth.dependencies import get_user_service
-from src.auth.schemas import UserCreateSchema, UserSchema, UserAuthSchema, UserUpdateSchema, Token
-from src.auth.secure import encode_jwt
+from src.auth.service import UserService, ChannelService
+from src.auth.dependencies import get_user_service, get_tg_channel_service, get_vk_channel_service
+from src.auth.schemas import UserCreateSchema, UserSchema, UserAuthSchema, UserUpdateSchema, UpdateSchema, Token
+from src.auth.secure import JWT
 from src.auth.utils import get_current_user, get_current_user_by_refresh
 
 router = APIRouter(
@@ -37,16 +37,16 @@ async def delete_user(user_id: Optional[int], user_service: Annotated[UserServic
 @router.post('/auth', response_model=Token, status_code=status.HTTP_201_CREATED)
 async def auth_user(data: UserAuthSchema, user_service: Annotated[UserService, Depends(get_user_service)]):
     user = await user_service.auth_user(data)
-    access_token = encode_jwt(user, token_type='access', expire_minutes=settings.jwt.ACCESS_TOKEN_EXPIRE_MINUTES)
-    refresh_token = encode_jwt(user, token_type='refresh', expire_minutes=settings.jwt.REFRESH_TOKEN_EXPIRE_MINUTES)
+    access_token = JWT.encode_jwt(user, token_type='access', expire_minutes=settings.jwt.ACCESS_TOKEN_EXPIRE_MINUTES)
+    refresh_token = JWT.encode_jwt(user, token_type='refresh', expire_minutes=settings.jwt.REFRESH_TOKEN_EXPIRE_MINUTES)
     token = Token(access_token=access_token, refresh_token=refresh_token)
     return token
 
 
-@router.post('/refresh_tokens', response_model=Token, status_code=status.HTTP_201_CREATED)
+@router.get('/refresh_tokens', response_model=Token, status_code=status.HTTP_201_CREATED)
 async def refresh_tokens(user: Annotated[UserSchema, Depends(get_current_user_by_refresh)]):
-    access_token = encode_jwt(user, token_type='access', expire_minutes=settings.jwt.ACCESS_TOKEN_EXPIRE_MINUTES)
-    refresh_token = encode_jwt(user, token_type='refresh', expire_minutes=settings.jwt.REFRESH_TOKEN_EXPIRE_MINUTES)
+    access_token = JWT.encode_jwt(user, token_type='access', expire_minutes=settings.jwt.ACCESS_TOKEN_EXPIRE_MINUTES)
+    refresh_token = JWT.encode_jwt(user, token_type='refresh', expire_minutes=settings.jwt.REFRESH_TOKEN_EXPIRE_MINUTES)
     token = Token(access_token=access_token, refresh_token=refresh_token)
     return token
 
@@ -57,7 +57,14 @@ async def get_profile(user: Annotated[UserSchema, Depends(get_current_user)]):
 
 
 @router.patch('/update', response_model=UserSchema, status_code=status.HTTP_200_OK)
-async def update_user(data: UserUpdateSchema, user: Annotated[UserSchema, Depends(get_current_user)],
-                      user_service: Annotated[UserService, Depends(get_user_service)]):
+async def update_user(data: UpdateSchema, user: Annotated[UserSchema, Depends(get_current_user)],
+                      user_service: Annotated[UserService, Depends(get_user_service)],
+                      tg_channel_service: Annotated[ChannelService, Depends(get_tg_channel_service)],
+                      vk_channel_service: Annotated[ChannelService, Depends(get_vk_channel_service)]):
+    if data.tg_id:
+        tg_channel = await tg_channel_service.add(channel_id=data.tg_id, user_id=user.id)
+    if data.vk_id:
+        vk_channel = await vk_channel_service.add(channel_id=data.vk_id, user_id=user.id)
+    data = UserUpdateSchema(**data.dict())
     user = await user_service.update(user.id, data)
     return user

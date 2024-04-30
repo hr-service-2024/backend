@@ -1,4 +1,4 @@
-from sqlalchemy import select
+from sqlalchemy import select, update
 from pydantic import BaseModel
 from sqlalchemy import func
 from sqlalchemy.exc import NoResultFound
@@ -7,7 +7,8 @@ from fastapi.exceptions import HTTPException
 
 from src.utils import SQLAlchemyRepository
 from src.database import async_session_maker
-from src.auth.models import User
+from src.auth.models import User, TgChannel, VkChannel
+from src.auth.schemas import ChannelSchema
 
 
 class UserRepository(SQLAlchemyRepository):
@@ -25,3 +26,11 @@ class UserRepository(SQLAlchemyRepository):
                     status_code=status.HTTP_404_NOT_FOUND,
                     detail='User with this username not found'
                 )
+
+
+class TgChannelRepository(SQLAlchemyRepository):
+    model = TgChannel
+
+
+class VkChannelRepository(SQLAlchemyRepository):
+    model = VkChannel

@@ -3,8 +3,8 @@ from fastapi import status
 from fastapi.exceptions import HTTPException
 
 from src.utils import AbstractRepository
-from src.auth.schemas import UserCreateSchema, UserSchema, UserAuthSchema, UserUpdateSchema
-from src.auth.secure import get_password_hash, verify_password
+from src.auth.schemas import UserCreateSchema, UserSchema, UserAuthSchema, UserUpdateSchema, ChannelSchema
+from src.auth.secure import Password
 
 
 class UserService:
@@ -15,7 +15,8 @@ class UserService:
         if not await self.is_existing_user(username=data.username):
             data = dict(
                 username=data.username,
-                hashed_password=get_password_hash(data.password)
+                hashed_password=Password.get_password_hash(data.password),
+                is_superuser=data.is_superuser
             )
             user = await self.repo.add_one(data)
             return user
@@ -66,7 +67,7 @@ class UserService:
                 detail='User is not active',
                 headers={'WWW-Authenticate': 'Bearer'}
             )
-        if not verify_password(data.password, user.hashed_password):
+        if not Password.verify_password(data.password, user.hashed_password):
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail='Password is not correct'
@@ -74,3 +75,31 @@ class UserService:
         return user
 
 
+class ChannelService:
+    def __init__(self, repo: AbstractRepository):
+        self.repo: AbstractRepository = repo()
+
+    async def add(self, channel_id: int, user_id: int) -> ChannelSchema:
+        if not await self.is_existing_channel(channel_id):
+            data = dict(
+                id=channel_id,
+                user_id=user_id
+            )
+            channel = await self.repo.add_one(data)
+            return channel
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail='Channel with this id already exists'
+            )
+
+    async def get_by_id(self, channel_id: int) -> UserSchema:
+        user = await self.repo.find_by_id(channel_id)
+        return user
+
+    async def is_existing_channel(self, channel_id: int):
+        try:
+            channel = await self.get_by_id(channel_id)
+            return True
+        except HTTPException:
+            return False
